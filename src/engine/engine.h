@@ -116,6 +116,22 @@ namespace CityFlow {
 
         Engine(const std::string &configFile, int threadNum);
 
+	    std::vector<std::pair<std::string, int>> getRoadLanesLengths(const std::string &id);
+	    std::vector<std::tuple<std::pair<std::string,std::string>, std::vector<std::pair<std::string,std::string>>, int>>
+	    getIntersectionLaneLinks(const std::string &id);
+	    std::vector<std::string> getRoadLanesIds(const std::string &id);
+	    
+	    std::vector<std::pair<std::vector<std::vector<std::string>>, std::vector<int>>> getIntersectionPhases(const std::string &id);
+	    
+	    bool isIntersectionVirtual(const std::string &id);
+
+	    std::vector<std::string> getIntersectionInRoadsIds(const std::string &id);
+	    std::vector<std::string> getIntersectionOutRoadsIds(const std::string &id);
+
+	    std::vector<std::string> getIntersectionsIds() const;
+	    
+	    double getFinishedVehicleCount() const { return finishedVehicleCnt; }
+	    
         double getInterval() const { return interval; }
 
         bool hasLaneChange() const { return laneChange; }

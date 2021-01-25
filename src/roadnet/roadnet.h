@@ -416,6 +416,19 @@ namespace CityFlow {
         std::vector<LaneLink *> laneLinkPointers;
         int index;
     public:
+	    int getType()
+	    {
+		    switch(type)
+		    {
+		    case go_straight:
+			    return 3;
+		    case turn_left:
+			    return 2;
+		    case turn_right:
+			    return 1;
+		    }
+	    }
+	    
         const std::vector<LaneLink> &getLaneLinks() const { return this->laneLinks; }
 
         std::vector<LaneLink> &getLaneLinks() { return this->laneLinks; }

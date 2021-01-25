@@ -82,7 +82,17 @@ namespace CityFlow {
         stepLog = "";
         return true;
     }
-
+	
+	std::vector<std::string> Engine::getIntersectionsIds() const
+	{
+		std::vector<std::string> ids;
+		for(auto const& value : roadnet.getIntersections())
+		{
+			ids.push_back(value.getId()); 
+		}
+		return ids;
+	} 
+	
     bool Engine::loadRoadNet(const std::string &jsonFile) {
         bool ans = roadnet.loadFromJson(jsonFile);
         int cnt = 0;
@@ -573,12 +583,13 @@ namespace CityFlow {
             planLaneChange();
             updateLeaderAndGap();
         }
-        notifyCross();
 
+        notifyCross();
         getAction();
         updateLocation();
         updateAction();
         updateLeaderAndGap();
+
 
         if (!rlTrafficLight) {
             std::vector<Intersection> &intersections = roadnet.getIntersections();
@@ -625,6 +636,7 @@ namespace CityFlow {
         return ret;
     }
 
+	
     std::map<std::string, int> Engine::getLaneVehicleCount() const {
         std::map<std::string, int> ret;
         for (const Lane *lane : roadnet.getLanes()) {
@@ -875,4 +887,144 @@ namespace CityFlow {
         }
     }
 
+
+	std::vector<std::string> Engine::getIntersectionInRoadsIds(const std::string &id)
+	{
+		Intersection *intersection = roadnet.getIntersectionById(id);
+		const std::vector<Road *> roads = intersection->getRoads();
+
+		std::vector<std::string> roadsIds;
+		for (auto && road: roads)
+		{
+			if (road->getStartIntersection().getId() != id)
+			{
+				roadsIds.push_back(road->getId());
+			}
+		}
+		return roadsIds;
+	}
+
+	std::vector<std::string> Engine::getIntersectionOutRoadsIds(const std::string &id)
+	{
+		Intersection *intersection = roadnet.getIntersectionById(id);
+		const std::vector<Road *> roads = intersection->getRoads();
+
+		std::vector<std::string> roadsIds;
+		for (auto && road: roads)
+		{
+			if (road->getEndIntersection().getId() != id)
+			{
+				roadsIds.push_back(road->getId());
+			}
+		}
+		return roadsIds;
+	}
+	
+	bool Engine::isIntersectionVirtual(const std::string &id)
+	{
+		Intersection *intersection = roadnet.getIntersectionById(id);
+		return intersection->isVirtualIntersection();
+
+	}
+
+
+	std::vector<std::tuple<std::pair<std::string,std::string>, std::vector<std::pair<std::string,std::string>>, int>>
+	Engine::getIntersectionLaneLinks(const std::string &id)
+	{
+		Intersection *intersection = roadnet.getIntersectionById(id);
+		std::vector<RoadLink> rls = intersection->getRoadLinks();
+		
+		std::vector<std::tuple<std::pair<std::string,std::string>, std::vector<std::pair <std::string,std::string>>, int>> output;
+		for (auto rl: rls)
+		{			
+			std::pair<std::string,std::string> roadIdsPair = std::make_pair(rl.getStartRoad()->getId(), rl.getEndRoad()->getId());
+			std::vector<LaneLink> lls = rl.getLaneLinks();
+
+			std::pair <std::string,std::string> llPair;
+			std::vector<std::pair <std::string,std::string>> linkPairs;
+			for (auto ll: lls)
+			{
+				// if (rl.getType() == 1) break;
+				Lane* inLane = ll.getStartLane();
+				Lane* outLane = ll.getEndLane();
+				llPair = std::make_pair(inLane->getId(), outLane->getId());
+				linkPairs.push_back(llPair);
+			}
+			// if (rl.getType() != 1)
+			output.push_back(std::make_tuple(roadIdsPair, linkPairs, rl.getType()));
+		}
+		return output;
+	}
+	
+	std::vector<std::pair<std::vector<std::vector<std::string>>, std::vector<int>>> Engine::getIntersectionPhases(const std::string &id)
+	{
+		Intersection *intersection = roadnet.getIntersectionById(id);
+		TrafficLight tl = intersection->getTrafficLight();
+		std::vector<RoadLink> rls = intersection->getRoadLinks();
+		std::vector<LightPhase> lps = tl.getPhases();
+
+		std::vector<std::pair<std::vector<std::vector<std::string>>, std::vector<int>>> phases;
+		std::vector<std::vector<std::string>> roads;
+		std::vector<std::string> roadIds;
+		std::vector<int> types;
+		
+		for (auto lp: lps)
+		{
+			std::vector<bool> availibility = lp.getRoadLinkAvailable();
+			int idx = 0;
+			for (auto available: availibility)
+			{
+				if (available) 
+				{
+					RoadLink roadLink = rls[idx];
+					// if (roadLink.getType() == 1) break; //ignore right turn as we assume it is always on
+					
+					std::string startRoadId = roadLink.getStartRoad()->getId();
+					std::string endRoadId = roadLink.getEndRoad()->getId();
+					
+					roadIds.push_back(startRoadId);
+					roadIds.push_back(endRoadId);
+					
+					int type = roadLink.getType();
+					types.push_back(type);
+					
+					roads.push_back(roadIds);
+					roadIds.clear();
+				}
+				++idx;
+			}
+			phases.push_back(std::make_pair(roads, types));
+			roads.clear();
+			types.clear();
+		}
+		return phases;
+	}
+
+	std::vector<std::string> Engine::getRoadLanesIds(const std::string &id)
+	{
+		std::vector<Lane> lanes = roadnet.getRoadById(id)->getLanes();
+		std::vector<std::string> laneIds;
+		for (auto lane: lanes)
+		{
+			laneIds.push_back(lane.getId());
+		}
+		return laneIds;
+	}
+
+
+	std::vector<std::pair<std::string, int>> Engine::getRoadLanesLengths(const std::string &id)
+	{
+		std::vector<std::pair<std::string, int>> pairs;
+		for (const auto &lane : roadnet.getRoadById(id)->getLanes())
+		{
+			pairs.push_back(std::make_pair(lane.getId(), lane.getLength()));
+		}
+
+		return pairs;
+	}
+	
 }
+
+
+
+

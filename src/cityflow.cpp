@@ -12,7 +12,16 @@ PYBIND11_MODULE(cityflow, m) {
         .def(py::init<const std::string&, int>(),
             "config_file"_a,
             "thread_num"_a=1
-        )
+	        )
+	    .def("get_road_lanes_length", &CityFlow::Engine::getRoadLanesLengths)
+	    .def("get_intersection_lane_links", &CityFlow::Engine::getIntersectionLaneLinks)
+	    .def("get_road_lanes", &CityFlow::Engine::getRoadLanesIds)
+	    .def("get_intersection_phases", &CityFlow::Engine::getIntersectionPhases)
+	    .def("is_intersection_virtual", &CityFlow::Engine::isIntersectionVirtual)
+	    .def("get_intersection_in_roads", &CityFlow::Engine::getIntersectionInRoadsIds)
+	    .def("get_intersection_out_roads", &CityFlow::Engine::getIntersectionOutRoadsIds)
+	    .def("get_finished_vehicle_count", &CityFlow::Engine::getFinishedVehicleCount)
+	    .def("get_intersection_ids", &CityFlow::Engine::getIntersectionsIds)
         .def("next_step", &CityFlow::Engine::nextStep)
         .def("get_vehicle_count", &CityFlow::Engine::getVehicleCount)
         .def("get_vehicles", &CityFlow::Engine::getVehicles, "include_waiting"_a=false)

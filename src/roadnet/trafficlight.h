@@ -20,6 +20,9 @@ namespace CityFlow {
         unsigned int phase = 0;
         double time = 0.0;
         std::vector<bool> roadLinkAvailable;
+	    
+    public:
+	    std::vector<bool> getRoadLinkAvailable(){ return roadLinkAvailable; };
     };
 
     class TrafficLight {
